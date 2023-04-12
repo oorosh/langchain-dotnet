@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenAI" Version="1.7.2" />
+    <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="SharpToken" Version="1.0.25" />
+  </ItemGroup>
 
 </Project>
