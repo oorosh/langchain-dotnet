@@ -7,12 +7,12 @@ namespace langchain.Schema
         /// <summary>
         /// Generated text output
         /// </summary>
-        string Text { get; set; }
+        public string Text { get; set; }
 
         /// <summary>
         /// Raw generation info response from the provider.
         /// May include things like reason for finishing (e.g. in OpenAI)
         /// </summary>
-        IDictionary<string, object> GenerationInfo { get; set; }
+        public IDictionary<string, object> GenerationInfo { get; set; }
     }
 }
