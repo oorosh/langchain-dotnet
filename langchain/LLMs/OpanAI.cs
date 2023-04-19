@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using SharpToken;
 using System.Text;
+using OpenAI_API.Completions;
 
 namespace langchain.LLMs
 {
@@ -87,13 +88,18 @@ namespace langchain.LLMs
 
             var tokenUsage = new TokenUsage();
 
+            var api = new OpenAI_API.OpenAIAPI("YOUR_API_KEY");
+
             foreach (var subprompt in subPrompts)
             {
                 //streaming
 
                 //or
+                var request = new CompletionRequest(subprompt.ToArray());
 
-                //completion
+                var result = await api.Completions.CreateCompletionAsync(request);
+
+                //map CompletionResult to LLMResult
             }
 
             throw new NotImplementedException();
