@@ -74,12 +74,7 @@ namespace langchain.LLMs
         * @param [stop] - Optional list of stop words to use when generating.
         *
         * @returns The full LLM output.
-        *
-        * @example
-        * ```ts
-        * import { OpenAI } from "langchain/llms/openai";
-        * const openai = new OpenAI();
-        * const response = await openai.generate(["Tell me a joke."]);
+        *response = await openai.generate(["Tell me a joke."]);
         * ```
         */
         public async Task<LLMResult> Generate(List<string> prompts, List<string>? stop = null)
