@@ -81,50 +81,57 @@ namespace langchain.LLMs
         * const response = await openai.generate(["Tell me a joke."]);
         * ```
         */
-        public async Task<LLMResult> Generate(string[] prompts, string[]? stop)
+        public async Task<LLMResult> Generate(List<string> prompts, List<string>? stop = null)
         {
-            var subPrompts = chunkArray(prompts, this.BatchSize);
+            var subPrompts = await GetSubPrompts(prompts);
 
             var tokenUsage = new TokenUsage();
 
-            if (this.Stop != null && stop != null)
+            foreach (var subprompt in subPrompts)
             {
-                throw new Exception("Stop found in input and default params");
-            }
+                //streaming
 
-            if (MaxTokens == -1)
-            {
-                if (prompts.Length != 1)
-                {
-                    throw new Exception("MaxTokens set to -1 not supported for multiple inputs");
-                }
-                MaxTokens = await calculateMaxTokens(prompts[0], ModelName);
+                //or
+
+                //completion
             }
 
             throw new NotImplementedException();
         }
 
-        public async Task<string> Call(string prompt, string[]? stop)
+        public async Task<string> Call(string prompt, List<string>? stop = null)
         {
-            var result = await Generate(new string[] { prompt }, stop);
+            var result = await Generate(new List<string> { prompt }, stop);
             return result.Generations.FirstOrDefault().FirstOrDefault().Text;
         }
 
-        private T[][] chunkArray<T>(T[] arr, int chunkSize)
+        public async Task<List<List<string>>> GetSubPrompts(List<string> prompts)
         {
-            List<T[]> chunks = new List<T[]>();
-            for (int i = 0; i < arr.Length; i += chunkSize)
+            // Get the sub prompts for llm call.
+            if (MaxTokens == -1)
             {
-                T[] chunk = new T[Math.Min(chunkSize, arr.Length - i)];
-                Array.Copy(arr, i, chunk, 0, chunk.Length);
-                chunks.Add(chunk);
+                if (prompts.Count != 1)
+                {
+                    throw new ArgumentException("max_tokens set to -1 not supported for multiple inputs.");
+                }
+                MaxTokens = await MaxTokensForPrompt(prompts[0]); // Assuming `MaxTokensForPrompt` is a defined method that returns an int.
             }
-            return chunks.ToArray();
+
+            List<List<string>> subPrompts = new List<List<string>>();
+            for (int i = 0; i < prompts.Count; i += BatchSize) // Assuming `batch_size` is an int variable with a defined value.
+            {
+                List<string> subPrompt = prompts.GetRange(i, Math.Min(BatchSize, prompts.Count - i));
+                subPrompts.Add(subPrompt);
+            }
+
+            return subPrompts;
         }
+
+
         //https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-        private static async Task<int> calculateMaxTokens(string prompt, string modelName)
+        private async Task<int> MaxTokensForPrompt(string prompt)
         {
-            var encoding = GptEncoding.GetEncoding(ModelNameMapper.GetModelNameForSharpToken(modelName).ToString());
+            var encoding = GptEncoding.GetEncoding(ModelNameMapper.GetModelNameForSharpToken(ModelName).ToString());
 
             // fallback to approximate calculation if tiktoken is not available
             int numTokens = (int)Math.Ceiling(prompt.Length / 4.0);
