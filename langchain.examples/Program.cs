@@ -7,7 +7,7 @@ var openAi = new OpanAI();
 
 //var result = await openAi.Call(prompt:"hello, can you tell me what is your name?");
 
-var prompt = new List<string> { "Tell me a joke", "Tell me a joke" };
+var prompt = new List<string> { "Tell me a joke", "Tell me a joke" , "what is your name?" };
 
 foreach (var item in prompt)
 {
