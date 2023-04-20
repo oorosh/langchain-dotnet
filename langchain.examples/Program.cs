@@ -16,4 +16,10 @@ foreach (var item in prompt)
 
 var result = await openAi.Generate(prompt);
 
-Console.WriteLine(result);
+foreach (var generation in result.Generations)
+{
+    foreach (var gen in generation)
+    {
+        Console.WriteLine(gen.Text);
+    }
+}
