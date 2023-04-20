@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using SharpToken;
-using System.Text;
 using OpenAI_API.Completions;
 
 namespace langchain.LLMs
@@ -81,9 +80,9 @@ namespace langchain.LLMs
         {
             var subPrompts = await GetSubPrompts(prompts);
 
-            var tokenUsage = new TokenUsage();
-
             var api = new OpenAI_API.OpenAIAPI("YOUR_API_KEY");
+
+            var results = new List<CompletionResult>();
 
             foreach (var subprompt in subPrompts)
             {
@@ -92,13 +91,65 @@ namespace langchain.LLMs
                 //or
                 var request = new CompletionRequest(subprompt.ToArray());
 
-                var result = await api.Completions.CreateCompletionAsync(request);
+                var completionResult = await api.Completions.CreateCompletionAsync(request);
 
-                //map CompletionResult to LLMResult
+                results.Add(completionResult);                
             }
 
-            throw new NotImplementedException();
+            return CreateLLMResult(results, prompts);
         }
+
+        private LLMResult CreateLLMResult(List<CompletionResult> completionResults, List<string> prompts)
+        {
+            List<List<Generation>> generations = new List<List<Generation>>();
+
+            var choices = completionResults.SelectMany(x => x.Completions);
+
+            var tokenUsage = new TokenUsage();
+
+            for (int i = 0; i < prompts.Count; i++)
+            {
+                List<Generation> generationList = new List<Generation>();
+                foreach (var choice in choices)
+                {
+                    Generation generation = new Generation()
+                    {
+                        Text = choice.Text,
+                        GenerationInfo = new Dictionary<string, dynamic>()
+                {
+                    { "finish_reason", choice.FinishReason },
+                    { "logprobs", choice.Logprobs }
+                }
+                    };
+                    generationList.Add(generation);
+                }
+                generations.Add(generationList);
+            }
+
+            foreach(var usage in completionResults.Select(x => x.Usage))
+            {
+
+                tokenUsage.CompletionTokens = usage.CompletionTokens + tokenUsage.CompletionTokens;
+              
+                tokenUsage.PromptTokens = usage.PromptTokens + tokenUsage.PromptTokens;
+
+                tokenUsage.TotalTokens = usage.TotalTokens + tokenUsage.TotalTokens;                
+            }
+
+            Dictionary<string, object> llmOutput = new Dictionary<string, dynamic>(){
+                { "token_usage", tokenUsage },
+                { "model_name", ModelName }
+            };
+
+            LLMResult llmResult = new LLMResult()
+            {
+                Generations = generations,
+                LlmOutput = llmOutput
+            };
+
+            return llmResult;
+        }
+
 
         public async Task<string> Call(string prompt, List<string>? stop = null)
         {
